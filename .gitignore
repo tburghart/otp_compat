@@ -1,0 +1,14 @@
+*.bak
+*.beam
+*.iml
+*.tmp
+*~
+.DS_Store
+.eunit
+.idea/
+.project
+.rebar
+.settings/
+ebin/
+env
+tmp/
