@@ -2,8 +2,8 @@ OTP Compatibility Modules
 =========================
 
 This repository exists to provide a small dependency that can be included in
-[Rebar](github.com/rebar/rebar)-based Erlang/OTP projects to access features
-in a version-independent manner.
+[Rebar](https://github.com/rebar/rebar)-based Erlang/OTP projects to access
+features in a version-independent manner.
 
 The general philosophy is to provide a common API across versions. For example,
 as of OTP-17 the `dict` operations have moved fromthe `erlang` namespace to
