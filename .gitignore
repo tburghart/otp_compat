@@ -1,6 +1,7 @@
 *.bak
 *.beam
 *.iml
+*.plt
 *.tmp
 *~
 .DS_Store
@@ -9,6 +10,7 @@
 .project
 .rebar
 .settings/
+doc/
 ebin/
 env
 tmp/
