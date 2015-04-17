@@ -14,8 +14,8 @@ _Ideally, I'll be able to work out the details of making the types available
 dynamically at runtime based on the running OTP release before OTP-18 (which
 removes them from the global namespace entirely) sees wide adoption, but that
 code's not ready for prime time quite yet. In the interim, code compiled with
-OTP-R16 or earlier *may not* run properly of OTP-18, and code compiled with
-OTP-17 or later *may not* run properly on OTP-R16 or earlier._
+OTP-R16 or earlier_ __may not__ _run properly on OTP-18, and code compiled
+with OTP-17 or later_ __may not__ _run properly on OTP-R16 or earlier._
 
 How to Use It
 -------------
