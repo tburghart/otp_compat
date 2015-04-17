@@ -14,8 +14,8 @@ _Ideally, I'll be able to work out the details of making the types available
 dynamically at runtime based on the running OTP release before OTP-18 (which
 removes them from the global namespace entirely) sees wide adoption, but that
 code's not ready for prime time quite yet. In the interim, code compiled with
-OTP-R16 or earlier_ __may not__ _run properly on OTP-18, and code compiled
-with OTP-17 or later_ __may not__ _run properly on OTP-R16 or earlier._
+OTP-R16 or earlier **may not** run properly on OTP-18, and code compiled
+with OTP-17 or later **may not** run properly on OTP-R16 or earlier._
 
 How to Use It
 -------------
@@ -35,8 +35,8 @@ Include the following entries in your `rebar.config` file:
     . . .
 ]}.
 ```
-_Do *not* use any branch other than `master` unless you want much pain and
-suffering!_
+_Do **not** use any branch other than_ `master` _unless you want much pain
+and suffering ... you have been warned!_
 
 Then, in your Erlang source, include the following line to make the target
 types accessible as `typename_t` _(see below)_.
