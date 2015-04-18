@@ -1,4 +1,3 @@
-%% -*- mode: erlang; erlang-indent-level: 4; indent-tabs-mode: nil -*-
 %% -------------------------------------------------------------------
 %%
 %% Copyright (c) 2015 Basho Technologies, Inc.
@@ -19,23 +18,24 @@
 %%
 %% -------------------------------------------------------------------
 
-% dynamic types are not yet included
-% {erl_first_files,   ["src/otp_compat.erl"]}.
-% {eunit_first_files, ["src/otp_compat.erl"]}.
+-module(otp_compat_tests).
 
-{erl_opts,  [
-    verbose,
-    warnings_as_errors,
-    {src_dirs, ["src"]},
-    % Starting with OTP-17, erlang:system_info(otp_release) returns just
-    % the major release (with no 'R' prefix), which coincides nicely with
-    % the move of non-primitive types into their respective namespaces.
-    {platform_define, "^[1-9][0-9]+", namespaced_types}
-]}.
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
 
-{eunit_opts,        [verbose]}.
-{cover_enabled,     true}.
+-include("otp_compat.hrl").
 
-{clean_files,       ["ebin/*", "doc/*"]}.
+init_test() ->
+    ?assertEqual(ok, otp_compat:init()).
 
-{edoc_opts,         [{preprocess, true}]}.
+type_map_test() ->
+    lists:foreach(fun({OtpType, Arity, LocType}) ->
+        ?assert(otp_compat:is_type_mapped({OtpType, Arity})),
+        ?assert(otp_compat:is_mapped_type({LocType, Arity}))
+    end, otp_compat:types_mapped()),
+    ?assertNot(otp_compat:is_type_mapped({?MODULE, 0})).
+
+version_test() ->
+    ?assertEqual(prj_test_utils:otp_version(), otp_compat:otp_version()).
+
+-endif. % TEST

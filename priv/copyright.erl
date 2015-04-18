@@ -19,23 +19,3 @@
 %%
 %% -------------------------------------------------------------------
 
-% dynamic types are not yet included
-% {erl_first_files,   ["src/otp_compat.erl"]}.
-% {eunit_first_files, ["src/otp_compat.erl"]}.
-
-{erl_opts,  [
-    verbose,
-    warnings_as_errors,
-    {src_dirs, ["src"]},
-    % Starting with OTP-17, erlang:system_info(otp_release) returns just
-    % the major release (with no 'R' prefix), which coincides nicely with
-    % the move of non-primitive types into their respective namespaces.
-    {platform_define, "^[1-9][0-9]+", namespaced_types}
-]}.
-
-{eunit_opts,        [verbose]}.
-{cover_enabled,     true}.
-
-{clean_files,       ["ebin/*", "doc/*"]}.
-
-{edoc_opts,         [{preprocess, true}]}.

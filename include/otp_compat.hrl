@@ -22,9 +22,28 @@
 -define(OTP_COMPAT_HRL_INCLUDED, true).
 
 -define(NAMESPACED_TYPES_LIST, [
-    array_t/0, array_t/1, dict_t/0, dict_t/2, digraph_t/0, gb_set_t/0,
-    gb_set_t/1, gb_tree_t/0, gb_tree_t/2, queue_t/0, queue_t/1, set_t/0,
-    set_t/1, tid_t/0
+    array_t/0, array_t/1,
+    dict_t/0, dict_t/2,
+    digraph_t/0,
+    gb_set_t/0, gb_set_t/1,
+    gb_tree_t/0, gb_tree_t/2,
+    queue_t/0, queue_t/1,
+    set_t/0, set_t/1,
+    tid_t/0
+]).
+
+%
+% This is the list returned by otp_compat:types_mapped().
+%
+-define(NAMESPACED_TYPE_MAPS, [
+    {array, 0, array_t}, {array, 1, array_t},
+    {dict, 0, dict_t}, {dict, 2, dict_t},
+    {digraph, 0, digraph_t},
+    {gb_set, 0, gb_set_t}, {gb_set, 1, gb_set_t},
+    {gb_tree, 0, gb_tree_t}, {gb_tree, 2, gb_tree_t},
+    {queue, 0, queue_t}, {queue, 1, queue_t},
+    {set, 0, set_t}, {set, 1, set_t},
+    {tid, 0, tid_t}
 ]).
 
 %

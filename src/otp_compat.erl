@@ -22,15 +22,9 @@
 %%  @doc    The {@module} module provides operations to initialize the
 %%          package and query runtime capabilities.
 %%
-%%  Once loaded, this package provides a subset of the namespace-qualified
-%%  types and operations that were moved from the `erlang' module to their
-%%  own modules as of OTP-17. Note that the entire new APIs are not provided,
-%%  only those elements that were available through OTP-R16.
-%%
 -module(otp_compat).
 
-%-on_load(init_hooks/0).
--compile([export_all]).
+-include("otp_compat.hrl").
 
 %%======================================================================
 %%  Public API
@@ -38,23 +32,29 @@
 
 -export([
     init/0,
-    init_hooks/0,
     otp_version/0,
-    namespaces/0,
-    supports/1
+    get_mapped_type/1,
+    is_mapped_type/1,
+    is_type_mapped/1,
+    types_mapped/0
+]).
+
+-export_type([
+    namespace/0,
+    typename/0, otp_type/0, loc_type/0,
+    typespec/0, typemap/0
 ]).
 
 %%======================================================================
 %%  Types
 %%======================================================================
 
--type token() :: erl_scan:token().
--type tokens() :: [token()].
--type dot_token() :: {dot, pos_integer()}.
--type statement() :: [token() | dot_token()].
--type statements() :: [statement()].
--type abstract() :: erl_parse:abstract_form().
--type object() :: binary().
+-type namespace() :: module().
+-type typename() :: atom().
+-type otp_type() :: typename().
+-type loc_type() :: typename().
+-type typespec() :: {typename(), arity()}.
+-type typemap() :: {otp_type(), arity(), loc_type()}.
 
 %%======================================================================
 %%  API functions
@@ -83,31 +83,41 @@ init() ->
 otp_version() ->
     otp_version(erlang:system_info(otp_release)).
 
--spec namespaces() -> [module()].
+-spec get_mapped_type(OtpType :: typespec()) -> typespec() | false.
 %%
-%%  @doc    Retrieves the list of namespaces (modules) that are assured of
-%%          being present as a result of this module being loaded.
+%%  @doc    Returns the type that the specified OTP type (not namespace
+%%          qualified) is mapped to by this package.
 %%
-%%  This is the complete set of namespaces for which {@link supports/1}
-%%  returns `true'.
-%%
-namespaces() ->
-    [Ns || {Ns, _Src} <- module_source(otp_version())].
+get_mapped_type(OtpType) ->
+    type_find_left(OtpType, types_mapped()).
 
--spec supports(Namespace :: module()) -> boolean().
+-spec is_mapped_type(MappedType :: typespec()) -> boolean().
 %%
-%%  @doc    Reports whether the specified namespace is assured to be present
-%%          as a result of this module being loaded.
+%%  @doc    Reports whether the specified Mapped type is included in this
+%%          package.
 %%
-%%  Invoking this operation with any item returned from {@link namespaces/0}
-%%  returns `true'; all other inputs return `false'.
+is_mapped_type(MappedType) ->
+    lists:any(fun(MapElem) ->
+        type_match_right(MappedType, MapElem)
+    end, types_mapped()).
+
+-spec is_type_mapped(OtpType :: typespec()) -> boolean().
 %%
-supports(Namespace) ->
-    lists:any(
-        fun({Ns,_Src}) ->
-            Ns == Namespace
-        end,
-        module_source(otp_version())).
+%%  @doc    Reports whether the specified OTP type (not namespace qualified)
+%%          is mapped by this package.
+%%
+is_type_mapped(OtpType) ->
+    lists:any(fun(MapElem) ->
+        type_match_left(OtpType, MapElem)
+    end, types_mapped()).
+
+-spec types_mapped() -> [typemap()].
+%%
+%%  @doc    Retrieves the list of type mappings that are included in this
+%%          package.
+%%
+types_mapped() ->
+    ?NAMESPACED_TYPE_MAPS.
 
 %%  @end
 %%======================================================================
@@ -129,184 +139,23 @@ otp_version(Rel) ->
     {Ver, _} = string:to_integer(Rel),
     Ver.
 
-%%======================================================================
-%%  This is where the magic happens
-%%======================================================================
+-spec type_find_left(typespec(), [typemap()]) -> typespec() | false.
+type_find_left(_, []) ->
+    false;
+type_find_left({LeftType, Arity}, [{LeftType, Arity, RightType} | _]) ->
+    {RightType, Arity};
+type_find_left(Type, [_ | Types]) ->
+    type_find_left(Type, Types).
 
--spec init_hooks() -> ok | no_return().
-%
-% Invoked when the module is loaded. 
-%
-init_hooks() ->
-    maybe_insert(module_source(otp_version())).
+-spec type_match_left(typespec(), typemap()) -> boolean().
+type_match_left({Type, Arity}, {Type, Arity, _}) ->
+    true;
+type_match_left(_, _) ->
+    false.
 
--spec maybe_insert([{module(), string()}]) -> ok | no_return().
-maybe_insert([]) ->
-    ok;
-maybe_insert([{Module, Source} | Rest]) ->
-    case code:is_loaded(Module) of
-        false ->
-            compile_and_load(Module, Source),
-            maybe_insert(Rest);
-        _ ->
-            maybe_insert(Rest)
-    end.
-
--spec compile_and_load(Module :: module(), Source :: string()) -> ok | no_return().
-compile_and_load(Module, Source) ->
-    Statements = source_to_statements(Module, Source),
-    Abstract = statements_to_abstract(Statements),
-    Object = abstract_to_object(Abstract),
-    %
-    % The docs for code:load_binary appear to lie - if you actually pass
-    % something that looks like a filename as the second parameter, it'll
-    % return a badarg error. Passing an atom gets past the check in
-    % code_server.erl ... at least in where I've tried it so far.
-    %
-    case code:load_binary(Module, Module, Object) of
-        {module, Module} ->
-            ok;
-        {error, What} ->
-            erlang:error(What)
-    end.
-
-%
-% Template of a scanned module statement.
-%
-% When matching the pattern, allow any value for the second argument, as the
-% 'dot' token has been seen with a value other than '1'. When creating one,
-% suplying a value of '1' seems to be just fine.
-%
--define(MODULE_STATEMENT(M,N),
-    [{'-', 1}, {atom, 1, module}, {'(', 1}, {atom, 1, M}, {')', 1}, {dot, N}]).
-
--spec source_to_statements(Module :: module(), Source :: string()) ->
-    statements() | no_return().
-%%
-%%  @doc    Tokenize the supplied string into statements.
-%%
-%%  The first statement in the result is a generated module definition, if
-%%  the Source contains a module definition that does not match the one that
-%%  would be generated for the specified Module, an error is returned.
-%%
-source_to_statements(Module, Source) ->
-    Tokens = source_to_tokens(Source),
-    Statements = tokens_to_statements(Tokens),
-    case module_statement(Statements) of
-        undefined ->
-            [?MODULE_STATEMENT(Module, 1)] ++ Statements;
-        Module ->
-            Statements;
-        Conflict ->
-            erlang:error({mod_conflict, Module, Conflict})
-    end.
-
--spec source_to_tokens(Source :: string()) -> tokens() | no_return().
-source_to_tokens(Source) ->
-    case erl_scan:string(Source) of
-        {ok, Tokens, _End} ->
-            Tokens;
-        {error, What, Where} ->
-            erlang:error({What, Where})
-    end.
-
--spec module_statement(statements()) -> module() | undefined.
-module_statement([]) ->
-    undefined;
-module_statement([Statement | Statements]) ->
-    case Statement of
-        ?MODULE_STATEMENT(Module, _) ->
-            Module;
-        _ ->
-            module_statement(Statements)
-    end.
-
--spec tokens_to_statements(Tokens :: tokens()) -> statements() | no_return().
-tokens_to_statements(Tokens) ->
-    tokens_to_statements(Tokens, {[], []}).
-    
--spec tokens_to_statements(Tokens :: tokens(),
-    {Incomplete :: tokens(), Statements :: statements()}) ->
-    statements() | no_return().
-tokens_to_statements([], {[], Statements}) ->
-    Statements;
-tokens_to_statements([], {Incomplete, Statements}) ->
-    erlang:error({Incomplete, Statements});
-tokens_to_statements([Token | Tokens], {Incomplete, Statements}) ->
-    Acc = Incomplete ++ [Token],
-    case Token of
-        {dot, _N} ->
-            tokens_to_statements(Tokens, {[], Statements ++ [Acc]});
-        _ ->
-            tokens_to_statements(Tokens, {Acc, Statements})
-    end.
-
--spec statements_to_abstract(Statements :: statements()) ->
-    abstract() | no_return().
-%%
-%%  @doc    Parse statements into abstract form.
-%%
-statements_to_abstract(Statements) ->
-    statements_to_abstract(Statements, []).
-
-statements_to_abstract([], Abstract) ->
-    Abstract;
-statements_to_abstract([Statement | Statements], Abstract) ->
-    case erl_parse:parse_form(Statement) of
-        {ok, AbsForm} ->
-            statements_to_abstract(Statements, Abstract ++ [AbsForm]);
-        {error, ParseErr} ->
-            erlang:error(ParseErr)
-    end.
-
--define(COMPILE_OPTS, [binary, no_auto_import, no_line_info, return_errors]).
-% -define(COMPILE_OPTS, [binary, debug_info, warnings_as_errors, report]).
-% -define(COMPILE_OPTS, [binary, warnings_as_errors, return_errors]).
-
--spec abstract_to_object(Abstract :: abstract()) -> object() | no_return().
-%%
-%%  @doc    Compile abstract form into a loadable binary.
-%%
-abstract_to_object(Abstract) ->
-    case compile:forms(Abstract, ?COMPILE_OPTS) of
-        {ok, _Module, Beam} ->
-            Beam;
-        {ok, _Module, _Beam, Warnings} ->
-            erlang:error({warnings, Warnings});
-        {error, Errors, Warnings} ->
-            erlang:error({Errors, Warnings})
-    end.
-
--spec module_source(OtpVer :: pos_integer()) -> [{module(), string()}].
-%
-% The goal is to provide reasonable facsimilies of the following OTP-17+
-% modules:
-%
-%   array, dict, digraph, gb_set, gb_tree, queue, sets
-%
-module_source(_OtpVer) ->
-[{
-sample_module,
-"-export([sample_func/0]).
--export_type([sample_type/0]).
--type sample_type() :: term().
-sample_func() ->
-    ok.
-"
-},{
-simple_module,
-"-export([simple_func/0]).
-simple_func() ->
-    ok.
-"
-}].
-
-%%  @end
-%%======================================================================
-%%  EUnit Tests
-%%======================================================================
--ifdef(TEST).
-
-
--endif. % TEST
+-spec type_match_right(typespec(), typemap()) -> boolean().
+type_match_right({Type, Arity}, {_, Arity, Type}) ->
+    true;
+type_match_right(_, _) ->
+    false.
 

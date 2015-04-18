@@ -22,15 +22,8 @@
 [
     {description,   "Erlang/OTP version compatibility operations"},
     {vsn,           "1.0.0"},
-    {modules, [
-        otp_compat
-    ]},
-    {registered, [
-    ]},
-    {applications, [
-        kernel,
-        stdlib
-    ]},
-    {env, [
-    ]}
+    {modules,       [otp_compat]},
+    {registered,    []},
+    {applications,  [kernel, stdlib, compiler]},
+    {env,           []}
 ]}.
