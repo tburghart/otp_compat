@@ -158,4 +158,3 @@ type_match_right({Type, Arity}, {_, Arity, Type}) ->
     true;
 type_match_right(_, _) ->
     false.
-
