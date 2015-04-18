@@ -42,7 +42,7 @@ Then, in your Erlang source, include the following line to make the target
 types accessible as `typename_t` _(see below)_.
 
 ```erlang
--include("otp_compat/include/otp_compat.hrl").
+-include_lib("otp_compat/include/otp_compat.hrl").
 ```
 
 The `_t` suffix was chosen __not__ because I want to make your Erlang code
