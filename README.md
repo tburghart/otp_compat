@@ -104,6 +104,7 @@ problem, and since the target audience for this package is developers using
 newer, not older, versions of Erlang, I've chosen not to bother adding more
 macros to get around it.
 
-
+If you come across issues other than the above, please **do** file them, and
+I'll have a look.
 
 _More to Come_ ...
