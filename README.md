@@ -10,12 +10,25 @@ as of OTP-17 the `dict` type has moved to the `dict` namespace and is
 deprecated in the global namespace. Using this package, you can use that type
 as `dict_t` regardless of the OTP version you're building with.
 
-_Ideally, I'll be able to work out the details of making the types available
+Caveats
+-------
+
+Ideally, I'll be able to work out the details of making the types available
 dynamically at runtime based on the running OTP release before OTP-18 (which
 removes them from the global namespace entirely) sees wide adoption, but that
 code's not ready for prime time quite yet. In the interim, code compiled with
-OTP-R16 or earlier **may not** run properly on OTP-18, and code compiled
-with OTP-17 or later **may not** run properly on OTP-R16 or earlier._
+OTP-R16 or earlier **may not** work properly on OTP-18, and code compiled
+with OTP-17 or later **may not** work properly on OTP-R16 or earlier.
+
+Unless you're rooting about in beam file internals, you're unlikely to stumble
+across any problems with the current static compile-time typing, even across
+OTP versions. Dialyzer, however, does just that, so if you compile a beam on
+one side of the type change boundary and run dialyzer from the other side of
+the boundary on it, expect copious warnings _(see below about outright dialyzer
+breakage in older versions)_. Realistically, dialyzer is generally a build
+step, so it should be in sync, but if you're running it against sources with
+the `--src` option be sure `namespaced_types` is defined (or not) as it is
+for compilation.
 
 How to Use It
 -------------
@@ -45,10 +58,10 @@ types accessible as `typename_t` _(see below)_.
 -include("otp_compat/include/otp_compat.hrl").
 ```
 
-The `_t` suffix was chosen __not__ because I want to make your Erlang code
-look like C, but because it seemed like a pattern that _a)_ would be easy to
-remember and _b)_ would be unlikely to conflict with existing Erlang code,
-which generally eschews C-like conventions.
+The `_t` suffix was chosen **not** because I want to make your Erlang code
+look like C, but because it seemed like a pattern that would be _a)_ easy to
+remember and _b)_ unlikely to conflict with existing Erlang code, which
+generally eschews C-like conventions.
 
 The Types
 ---------
