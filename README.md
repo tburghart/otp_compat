@@ -28,7 +28,7 @@ Include the following entries in your `rebar.config` file:
 ```erlang
 {erl_opts, [
     . . .
-    % The somewhat-common `namespaced_types` macro is still recognized
+    % The somewhat-common 'namespaced_types' macro is still recognized
     % - for now - though it's really not scoped tightly enough for comfort.
     {platform_define, "^[1-9][0-9]+", have_otp_namespaced_types}
     . . .
