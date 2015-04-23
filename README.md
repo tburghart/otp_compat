@@ -11,7 +11,7 @@ with _(but not limited to)_ the global types that have moved into namespaces
 as of OTP-17. For example, the `dict` type has moved to the `dict` namespace
 and is deprecated in the global namespace. Using this package, you can use
 that type as `dict_t` regardless of the OTP version you're building with
-_(see [Caveats](#Ramblings), below)_.
+_(see [below](#Ramblings))_.
 
 <a name="Copyright">Copyright and Ownership</a>
 -----------------------------------------------
@@ -28,7 +28,9 @@ Include the following entries in your `rebar.config` file:
 ```erlang
 {erl_opts, [
     . . .
-    {platform_define, "^[1-9][0-9]+", namespaced_types}
+    % The somewhat-common `namespaced_types` macro is still recognized
+    % - for now - though it's really not scoped tightly enough for comfort.
+    {platform_define, "^[1-9][0-9]+", have_otp_namespaced_types}
     . . .
 ]}.
 
@@ -42,7 +44,7 @@ _Do **not** use any branch other than_ `master` _unless you want much pain
 and suffering ... you have been warned!_
 
 Then, in your Erlang source, include the following line to make the target
-types accessible as `typename_t` _(see below)_.
+types accessible as `typename_t` _(see [below](#MappedTypes))_.
 
 ```erlang
 -include_lib("otp_compat/include/ns_types_.hrl").
