@@ -18,15 +18,22 @@
 %%
 %% -------------------------------------------------------------------
 
-%%
-%% !!! DEPRECATED !!!
-%%
-%% Use "ns_types.hrl"
-%%
+-ifndef(OTP_COMPAT_NS_TYPES_HRL_INCLUDED).
+-define(OTP_COMPAT_NS_TYPES_HRL_INCLUDED, true).
 
--ifndef(OTP_COMPAT_HRL_INCLUDED).
--define(OTP_COMPAT_HRL_INCLUDED, true).
+%
+% Support the somewhat-common `namespaced_types` macro, though it's really
+% not scoped tightly enough for comfort.
+%
+-ifdef(namespaced_types).
+-ifndef(have_otp_namespaced_types).
+-define(have_otp_namespaced_types, true).
+-endif. % have_otp_namespaced_types
+-endif. % namespaced_types
 
+%
+% List of mapped types, suitable for use in an -export_types statement.
+%
 -define(NAMESPACED_TYPES_LIST, [
     array_t/0, array_t/1,
     dict_t/0, dict_t/2,
@@ -39,7 +46,14 @@
 ]).
 
 %
-% This is the list returned by otp_compat:types_mapped().
+% This is the list used by the otp_compat type mapping reporting functions.
+% The structure is
+%
+% {
+%   unqualified-otp-type    ::  atom(),
+%   arity                   ::  non_neg_integer(),
+%   unqualified-mapped-type ::  atom()
+% }
 %
 -define(NAMESPACED_TYPE_MAPS, [
     {array, 0, array_t}, {array, 1, array_t},
@@ -60,7 +74,7 @@
 % compiled beam files are deployed "across the boundary" from where they
 % were built, but this works for now.
 %
--ifdef(namespaced_types).
+-ifdef(have_otp_namespaced_types).
 %
 % Type mapping for OTP-17+
 %
@@ -81,7 +95,9 @@
 
 -else.  % not namespaced_types
 %
-% Type mapping prior to OTP-17
+% Type mapping prior to OTP-17.
+% The funky parameter syntax (_X) works around some, but not all, gotchas
+% in how the compiler and friends handle type parameterization in R16-.
 %
 -type array_t()         :: array().
 -type array_t(_T)       :: array().
@@ -100,4 +116,4 @@
 
 -endif. % namespaced_types
 
--endif. % OTP_COMPAT_HRL_INCLUDED
+-endif. % OTP_COMPAT_NS_TYPES_HRL_INCLUDED

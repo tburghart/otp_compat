@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------
 #
-# Copyright (c) 2015 Basho Technologies, Inc.
+# Copyright (c) 2015 T. R. Burghart.
 #
 # This file is provided to you under the Apache License,
 # Version 2.0 (the "License"); you may not use this file
@@ -19,13 +19,24 @@
 # -------------------------------------------------------------------
 
 REBAR	?= rebar
-PRJDIR	:= $(dir $(lastword $(MAKEFILE_LIST)))
+PRJDIR	:= $(shell cd $(dir $(lastword $(MAKEFILE_LIST))) && pwd)
+#
+# Test source code uses this same pattern to find the PLT file, so changing
+# it WILL break things!
+#
 OTPVSN	:= $(shell erl -noshell -eval \
-	'io:fwrite("~s",[erlang:system_info(otp_release)]), halt().')
-PLTFILE	:= $(PRJDIR)dialyzer_$(OTPVSN).plt
+		'io:fwrite("~s",[erlang:system_info(otp_release)]), halt().')
+PLTFILE	:= $(PRJDIR)/dialyzer_$(OTPVSN).plt
+PLTAPPS	:= erts kernel stdlib compiler crypto
+
+DZARGS	:= --verbose -Wunmatched_returns -Werror_handling -Wrace_conditions
+DZSARGS	:= --src -I $(PRJDIR)/include -DDIALYZER
+ifeq (,$(findstring R,$(OTPVSN)))
+DZSARGS	+= -Dnamespaced_types
+endif
 
 # Default EDoc stylesheet
-CSSFILE := $(PRJDIR)doc/stylesheet.css
+CSSFILE := $(PRJDIR)/doc/stylesheet.css
 # Include an ugly hack to bump up the monospaced font size, because most
 # browsers seem to set it a few points smaller than the body text size.
 # If your browser handles it appropriately, just change it to normal.
@@ -40,21 +51,21 @@ clean ::
 test ::
 	$(REBAR) eunit
 
+check :: dialyzer
+
+checks :: dialyzers
+
 docs ::
 	$(REBAR) skip_deps=true doc
 	@grep -q '$(CSSADDL)' $(CSSFILE) || echo '$(CSSADDL)' >> $(CSSFILE)
-	@open $(PRJDIR)doc/index.html
+	@echo Doc entry point: $(PRJDIR)/doc/index.html
 
-dialyzer :: $(PLTFILE) compile
-	dialyzer --plt $(PLTFILE) \
-		--quiet \
-		-Wunmatched_returns \
-		-Werror_handling \
-		-Wrace_conditions \
-		-Wunderspecs \
-		ebin
+dialyzer :: compile $(PLTFILE)
+	dialyzer --plt $(PLTFILE) $(DZARGS) ebin
+
+dialyzers :: $(PLTFILE)
+	dialyzer --plt $(PLTFILE) $(DZSARGS) $(DZARGS) src
 
 $(PLTFILE) :
-	dialyzer --build_plt --output_plt $(PLTFILE) \
-		--apps erts kernel stdlib
+	dialyzer --build_plt --output_plt $(PLTFILE) --apps $(PLTAPPS)
 

@@ -5,12 +5,13 @@
 *.tmp
 *~
 .DS_Store
-.eunit
+.eunit/
 .idea/
 .project
-.rebar
+.rebar/
 .settings/
 doc/
 ebin/
 env
+save/
 tmp/

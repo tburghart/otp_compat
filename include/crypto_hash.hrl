@@ -18,12 +18,24 @@
 %%
 %% -------------------------------------------------------------------
 
-{application, otp_compat,
-[
-    {description,   "Erlang/OTP version compatibility operations"},
-    {vsn,           "1.0.0"},
-    {modules,       [otp_compat]},
-    {registered,    []},
-    {applications,  [kernel, stdlib, compiler]},
-    {env,           []}
-]}.
+-ifndef(OTP_COMPAT_CRYPTO_HASH_HRL_INCLUDED).
+-define(OTP_COMPAT_CRYPTO_HASH_HRL_INCLUDED, true).
+
+-ifdef(have_otp_crypto_hash).
+%
+% Starting in R16, hashing operations move into common crypto:hash
+% functions.
+%
+-define(crypto_hash_sha(Data), crypto:hash(sha, Data)).
+-define(crypto_hash_md5(Data), crypto:hash(md5, Data)).
+
+-else.  % not have_otp_crypto_hash
+%
+% Before R16, OTP had distinct hash functions per algorithm.
+%
+-define(crypto_hash_sha(Data), crypto:sha(Data)).
+-define(crypto_hash_md5(Data), crypto:md5(Data)).
+
+-endif. % have_otp_crypto_hash
+
+-endif. % OTP_COMPAT_CRYPTO_HASH_HRL_INCLUDED

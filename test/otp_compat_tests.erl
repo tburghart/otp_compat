@@ -18,12 +18,24 @@
 %%
 %% -------------------------------------------------------------------
 
-{application, otp_compat,
-[
-    {description,   "Erlang/OTP version compatibility operations"},
-    {vsn,           "1.0.0"},
-    {modules,       [otp_compat]},
-    {registered,    []},
-    {applications,  [kernel, stdlib, compiler]},
-    {env,           []}
-]}.
+-module(otp_compat_tests).
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+-include("ns_types.hrl").
+
+init_test() ->
+    ?assertEqual(ok, otp_compat:init()).
+
+type_map_test() ->
+    lists:foreach(fun({OtpType, Arity, LocType}) ->
+        ?assert(otp_compat:is_type_mapped({OtpType, Arity})),
+        ?assert(otp_compat:is_mapped_type({LocType, Arity}))
+    end, otp_compat:types_mapped()),
+    ?assertNot(otp_compat:is_type_mapped({?MODULE, 0})).
+
+version_test() ->
+    ?assertEqual(prj_test_utils:otp_version(), otp_compat:otp_version()).
+
+-endif. % TEST

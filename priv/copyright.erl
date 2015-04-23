@@ -1,3 +1,4 @@
+%% -*- mode: erlang; erlang-indent-level: 4; indent-tabs-mode: nil -*-
 %% -------------------------------------------------------------------
 %%
 %% Copyright (c) 2015 T. R. Burghart.
@@ -18,12 +19,3 @@
 %%
 %% -------------------------------------------------------------------
 
-{application, otp_compat,
-[
-    {description,   "Erlang/OTP version compatibility operations"},
-    {vsn,           "1.0.0"},
-    {modules,       [otp_compat]},
-    {registered,    []},
-    {applications,  [kernel, stdlib, compiler]},
-    {env,           []}
-]}.
