@@ -28,13 +28,13 @@
 %
 -define(crypto_hash_sha(Data), crypto:hash(sha, Data)).
 -define(crypto_hash_sha_init(), crypto:hash_init(sha)).
--define(crypto_hash_sha_update(Ctx, Data), crypto:hash_update(sha, Ctx, Data)).
--define(crypto_hash_sha_final(Ctx), crypto:hash_final(sha, Ctx)).
+-define(crypto_hash_sha_update(Ctx, Data), crypto:hash_update(Ctx, Data)).
+-define(crypto_hash_sha_final(Ctx), crypto:hash_final(Ctx)).
 
 -define(crypto_hash_md5(Data), crypto:hash(md5, Data)).
 -define(crypto_hash_md5_init(), crypto:hash_init(sha)).
--define(crypto_hash_md5_update(Ctx, Data), crypto:hash_update(sha, Ctx, Data)).
--define(crypto_hash_md5_final(Ctx), crypto:hash_final(sha, Ctx)).
+-define(crypto_hash_md5_update(Ctx, Data), crypto:hash_update(Ctx, Data)).
+-define(crypto_hash_md5_final(Ctx), crypto:hash_final(Ctx)).
 
 -else.  % no_otp_crypto_hash
 %
