@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------
 #
-# Copyright (c) 2015 Basho Technologies, Inc.
+# Copyright (c) 2015 T. R. Burghart.
 #
 # This file is provided to you under the Apache License,
 # Version 2.0 (the "License"); you may not use this file
@@ -27,12 +27,23 @@ PRJDIR	:= $(shell cd $(dir $(lastword $(MAKEFILE_LIST))) && pwd)
 OTPVSN	:= $(shell erl -noshell -eval \
 		'io:fwrite("~s",[erlang:system_info(otp_release)]), halt().')
 PLTFILE	:= $(PRJDIR)/dialyzer_$(OTPVSN).plt
-PLTAPPS	:= erts kernel stdlib compiler
+PLTAPPS	:= erts kernel stdlib compiler crypto
 
 DZARGS	:= --verbose -Wunmatched_returns -Werror_handling -Wrace_conditions
 DZSARGS	:= --src -I $(PRJDIR)/include -DDIALYZER
-ifeq (,$(findstring R,$(OTPVSN)))
-DZSARGS	+= -Dnamespaced_types
+#
+# Everything before the advent of namespaced types starts with 'R'.
+#
+ifneq (,$(findstring R,$(OTPVSN)))
+DZSARGS	+= -Dno_otp_namespaced_types
+endif
+#
+# Figuring out whether crypto:hash is present is a bit more challenging.
+#
+ifneq (,$(findstring R,$(OTPVSN)))
+ifeq (,$(findstring R16,$(OTPVSN)))
+DZSARGS	+= -Dno_otp_crypto_hash
+endif
 endif
 
 # Default EDoc stylesheet

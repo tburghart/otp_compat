@@ -18,15 +18,12 @@
 %%
 %% -------------------------------------------------------------------
 
-%%
-%% !!! DEPRECATED !!!
-%%
-%% Use "ns_types.hrl"
-%%
+-ifndef(OTP_COMPAT_NS_TYPES_HRL_INCLUDED).
+-define(OTP_COMPAT_NS_TYPES_HRL_INCLUDED, true).
 
--ifndef(OTP_COMPAT_HRL_INCLUDED).
--define(OTP_COMPAT_HRL_INCLUDED, true).
-
+%
+% List of mapped types, suitable for use in an -export_types statement.
+%
 -define(NAMESPACED_TYPES_LIST, [
     array_t/0, array_t/1,
     dict_t/0, dict_t/2,
@@ -39,7 +36,14 @@
 ]).
 
 %
-% This is the list returned by otp_compat:types_mapped().
+% This is the list used by the otp_compat type mapping reporting functions.
+% The structure is
+%
+% {
+%   unqualified-otp-type    ::  atom(),
+%   arity                   ::  non_neg_integer(),
+%   unqualified-mapped-type ::  atom()
+% }
 %
 -define(NAMESPACED_TYPE_MAPS, [
     {array, 0, array_t}, {array, 1, array_t},
@@ -53,14 +57,13 @@
 ]).
 
 %
-% Statically mapped types. These depend on whether the 'namespaced_types'
-% macro is defined in the compilation environment.
+% Statically mapped types.
 %
 % I'm working on a better way to do this, so the types will be valid when
 % compiled beam files are deployed "across the boundary" from where they
 % were built, but this works for now.
 %
--ifdef(namespaced_types).
+-ifndef(no_otp_namespaced_types).
 %
 % Type mapping for OTP-17+
 %
@@ -79,9 +82,11 @@
 -type set_t(T)          :: sets:set(T).
 -type tid_t()           :: ets:tid().
 
--else.  % not namespaced_types
+-else.  % no_otp_namespaced_types
 %
-% Type mapping prior to OTP-17
+% Type mapping prior to OTP-17.
+% The funky parameter syntax (_X) works around some, but not all, gotchas
+% in how the compiler and friends handle type parameterization in R16-.
 %
 -type array_t()         :: array().
 -type array_t(_T)       :: array().
@@ -98,6 +103,6 @@
 -type set_t(_T)         :: set().
 -type tid_t()           :: ets:tid().
 
--endif. % namespaced_types
+-endif. % no_otp_namespaced_types
 
--endif. % OTP_COMPAT_HRL_INCLUDED
+-endif. % OTP_COMPAT_NS_TYPES_HRL_INCLUDED

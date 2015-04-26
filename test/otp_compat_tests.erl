@@ -1,6 +1,6 @@
 %% -------------------------------------------------------------------
 %%
-%% Copyright (c) 2015 Basho Technologies, Inc.
+%% Copyright (c) 2015 T. R. Burghart.
 %%
 %% This file is provided to you under the Apache License,
 %% Version 2.0 (the "License"); you may not use this file
@@ -23,7 +23,7 @@
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
--include("otp_compat.hrl").
+-include("ns_types.hrl").
 
 init_test() ->
     ?assertEqual(ok, otp_compat:init()).
