@@ -6,12 +6,23 @@ This repository exists to provide a small dependency that can be included in
 features in a version-independent manner. Obviously, anything you can do in
 `rebar`, you can do without it, but ___my___ goal is ease-of-use in `rebar`.
 
+_If you're building without rebar, you can find an example of one way to
+handle getting the OTP release in this project's_ `Makefile`.
+
 The general philosophy is to provide a common API across versions, starting
 with _(but not limited to)_ the global types that have moved into namespaces
 as of OTP-17. For example, the `dict` type has moved to the `dict` namespace
 and is deprecated in the global namespace. Using this package, you can use
 that type as `dict_t` regardless of the OTP version you're building with
 _(see [below](#Ramblings))_.
+
+In addition to type mapping, there are other parts of the Erlang/OTP API that
+have changed in recent versions, and I'm adding them as they cause me pain.
+One of those, the move in the crypto API from distinct per-algoritm digest
+functions to a set of common `hash` functions, is partially addressed in the
+`crypto_hash.hrl` file, which defines macros that expand to the appropriate
+functions at compile time _(another reason I may move a bunch of this into a_
+`parse_tranform` _as mentioned [below](#Ramblings))_.
 
 <a name="Copyright">Copyright and Ownership</a>
 -----------------------------------------------
@@ -23,14 +34,22 @@ The owner of the copyright ___may___ change, the license terms will not.
 <a name="Using">How to Use It</a>
 ---------------------------------
 
-Include the following entries in your `rebar.config` file:
+I've taken the approach of defining a macro to ___turn off___ current features
+instead of using one _(like the somewhat-common_ `namespaced_types` _approach)_
+to turn them ___on___, on the assumption that once the target code evolves
+to the point that it no longer supports OTP releases without the features, the
+macro no longer needs to be defined at all.
+
+Include the following entries in your `rebar.config` file to turn on support
+for older versions of OTP:
 
 ```erlang
 {erl_opts, [
     . . .
-    % The somewhat-common 'namespaced_types' macro is still recognized
-    % - for now - though it's really not scoped tightly enough for comfort.
-    {platform_define, "^[1-9][0-9]+", have_otp_namespaced_types}
+    % Include to use the xxx_t type definitions:
+    {platform_define, "^R[1-9]", no_otp_namespaced_types}
+    % Include to use the ?crypto_hash_xxx macros:
+    {platform_define, "^R1[0-5]", no_otp_crypto_hash}
     . . .
 ]}.
 
@@ -47,13 +66,23 @@ Then, in your Erlang source, include the following line to make the target
 types accessible as `typename_t` _(see [below](#MappedTypes))_.
 
 ```erlang
--include_lib("otp_compat/include/ns_types_.hrl").
+-include_lib("otp_compat/include/ns_types.hrl").
 ```
 
 The `_t` suffix was chosen **not** because I want to make your Erlang code
 look like C, but because it seemed like a pattern that would be _a)_ easy to
 remember and _b)_ unlikely to conflict with existing Erlang code, which
 generally eschews C-like conventions.
+
+To use the `crypto_hash_xxx` macros, you'd put the following in your source
+
+```erlang
+-include_lib("otp_compat/include/crypto_hash.hrl").
+```
+
+then use (for example) `?crypto_hash_sha(...)` where you had previously used
+`crypto:sha(...)` or `crypto:hash(sha, ...)` to get the correct function for
+the version you're compiling with.
 
 <a name="MappedTypes">The Types</a>
 -----------------------------------
@@ -107,27 +136,31 @@ Ideally, I'll be able to work out the details of making the types available
 dynamically at runtime based on the running OTP release before OTP-18 (which
 removes them from the global namespace entirely) sees wide adoption, but that
 code's not ready for prime time quite yet. In the interim, code compiled with
-OTP-R16 or earlier **may not** work properly on OTP-18, and code compiled
-with OTP-17 or later **may not** work properly on OTP-R16 or earlier.
+OTP-R16 or earlier ___may not___ work properly on OTP-18, and code compiled
+with OTP-17 or later ___may not___ work properly on OTP-R16 or earlier.
 
 Unless you're rooting about in beam file internals, you're unlikely to stumble
 across any problems with the current static compile-time typing, even across
 OTP versions. Dialyzer, however, does just that, so if you compile a beam on
 one side of the type change boundary and run dialyzer from the other side of
-the boundary on it, expect copious warnings _(see below about outright dialyzer
-breakage in older versions)_. Realistically, dialyzer is generally a build
-step, so it should be in sync, but if you're running it against sources with
-the `--src` option be sure `namespaced_types` is defined (or not) as it is
-for compilation.
+the boundary on it, expect copious warnings _(see [Issues](#Issues) about
+outright dialyzer breakage in older versions)_.
+Realistically, dialyzer is generally a build step, so it should be in sync,
+but if you're running it against sources with the `--src` option be sure
+`no_otp_namespaced_types` is defined (or not) as it is for compilation.
 
 I'm also leaning toward making the whole thing a `parse_tranform`, which will
 allow me to add new capabilities without changing target source code at all.
 Among those capabilities would be options selecting whether the result of
-the transformation should be targetted at only the OTP version on which the
+the transformation should be targeted at only the OTP version on which the
 compilation is performed (no performance impact on mapped functions), or on
-any OTP version (some performance impact on mapped functions).
+any OTP version (some performance impact using dynamically-mapped functions).
+_I believe that a lot of the potential performance impact can be alleviated
+using some of Erlang's nifty dynamic code loading capabilities, but it'll
+probably be a while before I have the time to dig into that._
+
 The possibilities are not technically endless, but there's far more that can
 be done transforming the intermediate forms than I can do with static macros
-and type definitions.
+and type definitions alone.
 
 This is ___very much___ a work in progress, _More to Come_ ...

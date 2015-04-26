@@ -21,21 +21,35 @@
 -ifndef(OTP_COMPAT_CRYPTO_HASH_HRL_INCLUDED).
 -define(OTP_COMPAT_CRYPTO_HASH_HRL_INCLUDED, true).
 
--ifdef(have_otp_crypto_hash).
+-ifndef(no_otp_crypto_hash).
 %
 % Starting in R16, hashing operations move into common crypto:hash
 % functions.
 %
 -define(crypto_hash_sha(Data), crypto:hash(sha, Data)).
--define(crypto_hash_md5(Data), crypto:hash(md5, Data)).
+-define(crypto_hash_sha_init(), crypto:hash_init(sha)).
+-define(crypto_hash_sha_update(Ctx, Data), crypto:hash_update(sha, Ctx, Data)).
+-define(crypto_hash_sha_final(Ctx), crypto:hash_final(sha, Ctx)).
 
--else.  % not have_otp_crypto_hash
+-define(crypto_hash_md5(Data), crypto:hash(md5, Data)).
+-define(crypto_hash_md5_init(), crypto:hash_init(sha)).
+-define(crypto_hash_md5_update(Ctx, Data), crypto:hash_update(sha, Ctx, Data)).
+-define(crypto_hash_md5_final(Ctx), crypto:hash_final(sha, Ctx)).
+
+-else.  % no_otp_crypto_hash
 %
 % Before R16, OTP had distinct hash functions per algorithm.
 %
 -define(crypto_hash_sha(Data), crypto:sha(Data)).
--define(crypto_hash_md5(Data), crypto:md5(Data)).
+-define(crypto_hash_sha_init(), crypto:sha_init()).
+-define(crypto_hash_sha_update(Ctx, Data), crypto:sha_update(Ctx, Data)).
+-define(crypto_hash_sha_final(Ctx), crypto:sha_final(Ctx)).
 
--endif. % have_otp_crypto_hash
+-define(crypto_hash_md5(Data), crypto:md5(Data)).
+-define(crypto_hash_md5_init(), crypto:md5_init()).
+-define(crypto_hash_md5_update(Ctx, Data), crypto:md5_update(Ctx, Data)).
+-define(crypto_hash_md5_final(Ctx), crypto:md5_final(Ctx)).
+
+-endif. % no_otp_crypto_hash
 
 -endif. % OTP_COMPAT_CRYPTO_HASH_HRL_INCLUDED

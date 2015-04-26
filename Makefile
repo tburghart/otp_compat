@@ -31,8 +31,19 @@ PLTAPPS	:= erts kernel stdlib compiler crypto
 
 DZARGS	:= --verbose -Wunmatched_returns -Werror_handling -Wrace_conditions
 DZSARGS	:= --src -I $(PRJDIR)/include -DDIALYZER
-ifeq (,$(findstring R,$(OTPVSN)))
-DZSARGS	+= -Dnamespaced_types
+#
+# Everything before the advent of namespaced types starts with 'R'.
+#
+ifneq (,$(findstring R,$(OTPVSN)))
+DZSARGS	+= -Dno_otp_namespaced_types
+endif
+#
+# Figuring out whether crypto:hash is present is a bit more challenging.
+#
+ifneq (,$(findstring R,$(OTPVSN)))
+ifeq (,$(findstring R16,$(OTPVSN)))
+DZSARGS	+= -Dno_otp_crypto_hash
+endif
 endif
 
 # Default EDoc stylesheet

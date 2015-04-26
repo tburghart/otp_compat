@@ -22,16 +22,6 @@
 -define(OTP_COMPAT_NS_TYPES_HRL_INCLUDED, true).
 
 %
-% Support the somewhat-common `namespaced_types` macro, though it's really
-% not scoped tightly enough for comfort.
-%
--ifdef(namespaced_types).
--ifndef(have_otp_namespaced_types).
--define(have_otp_namespaced_types, true).
--endif. % have_otp_namespaced_types
--endif. % namespaced_types
-
-%
 % List of mapped types, suitable for use in an -export_types statement.
 %
 -define(NAMESPACED_TYPES_LIST, [
@@ -67,14 +57,13 @@
 ]).
 
 %
-% Statically mapped types. These depend on whether the 'namespaced_types'
-% macro is defined in the compilation environment.
+% Statically mapped types.
 %
 % I'm working on a better way to do this, so the types will be valid when
 % compiled beam files are deployed "across the boundary" from where they
 % were built, but this works for now.
 %
--ifdef(have_otp_namespaced_types).
+-ifndef(no_otp_namespaced_types).
 %
 % Type mapping for OTP-17+
 %
@@ -93,7 +82,7 @@
 -type set_t(T)          :: sets:set(T).
 -type tid_t()           :: ets:tid().
 
--else.  % not namespaced_types
+-else.  % no_otp_namespaced_types
 %
 % Type mapping prior to OTP-17.
 % The funky parameter syntax (_X) works around some, but not all, gotchas
@@ -114,6 +103,6 @@
 -type set_t(_T)         :: set().
 -type tid_t()           :: ets:tid().
 
--endif. % namespaced_types
+-endif. % no_otp_namespaced_types
 
 -endif. % OTP_COMPAT_NS_TYPES_HRL_INCLUDED
