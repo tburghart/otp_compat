@@ -55,7 +55,7 @@ for older versions of OTP:
 
 {deps, [
     . . .
-    {otp_compat, ".*", {git, "git://github.com/tburghart/otp_compat.git"}, {branch, "master"}}
+    {otp_compat, ".*", {git, "git://github.com/tburghart/otp_compat.git", {branch, "master"}}}
     . . .
 ]}.
 ```
